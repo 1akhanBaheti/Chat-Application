@@ -171,7 +171,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 appbar.preferredSize.height -
                                 52,
                             child: ListView.builder(
-                                itemCount: m.length - 3,
+                                itemCount: m.length - 4,
                                 itemBuilder: (ctx, index) {
                                   //print(index);
                                   return GestureDetector(

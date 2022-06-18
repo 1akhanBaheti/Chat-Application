@@ -1,13 +1,26 @@
+
+
+import 'dart:io';
+
 import 'package:assignment/Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-class GroupName extends StatelessWidget {
-  //const GroupName({Key? key}) : super(key: key);
+class GroupName extends StatefulWidget {
+  @override
+  State<GroupName> createState() => _GroupNameState();
+}
 
+class _GroupNameState extends State<GroupName> {
+  //const GroupName({Key? key}) : super(key: key);
   var name = TextEditingController();
+  var file;
   bool isLoading = false;
+
+  var nameempty = false;
+
   @override
   Widget build(BuildContext context) {
     var prov = Provider.of<provider1>(context);
@@ -33,21 +46,53 @@ class GroupName extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: EdgeInsets.all(15),
+                padding: EdgeInsets.only(left: 15, right: 15, top: 15),
                 child: Row(
                   children: [
-                    Container(
-                      height: 60,
-                      width: 60,
-                      decoration: BoxDecoration(
-                          color: Colors.amber,
-                          borderRadius: BorderRadius.circular(50)),
-                      child: Icon(Icons.camera_alt),
+                    InkWell(
+                      onTap: () async {
+                        var file1 = await ImagePicker()
+                            .pickImage(source: ImageSource.gallery);
+                        //Navigator.pop(context);
+                        if (file1 != null) {
+                          setState(() {
+                            file = file1;
+                          });
+                        }
+                      },
+                      child: Stack(
+                        children:[ 
+                          file==null?Container(
+                          height: 60,
+                          width: 60,
+                          decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(50)),
+                          child:  Icon(Icons.camera_alt,color:Colors.grey.shade500,),
+                        ):Container(),
+                        file!=null?Container(
+                           decoration: BoxDecoration(
+                           
+                              borderRadius: BorderRadius.circular(50)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: Image.file(File(file.path))),
+                          height: 60,
+                          width: 60,):Container()
+                        ]
+                      ),
                     ),
                     Expanded(
                         child: Container(
-                      margin: EdgeInsets.only(left: 10, right: 10),
+                      margin: const EdgeInsets.only(left: 10, right: 10),
                       child: TextFormField(
+                        onChanged: (e) {
+                          if (nameempty) {
+                            setState(() {
+                              nameempty = false;
+                            });
+                          }
+                        },
                         style: GoogleFonts.lato(fontSize: 19),
                         cursorHeight: 25,
                         controller: name,
@@ -57,7 +102,21 @@ class GroupName extends StatelessWidget {
                   ],
                 ),
               ),
+              nameempty
+                  ? Container(
+                      margin:
+                          const EdgeInsets.only(left: 80, right: 10, top: 5),
+                      child: Text(
+                        '*Empty',
+                        style: GoogleFonts.lato(
+                            fontSize: 18,
+                            color: Colors.red.shade900,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  : Container(),
               Container(
+                margin: EdgeInsets.only(top:8),
                 height: 1,
                 color: Colors.grey.shade300,
               ),
@@ -70,9 +129,9 @@ class GroupName extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    EdgeInsets.only(left: 10, right: 10, top: 2, bottom: 2),
-                margin: EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.only(
+                    left: 10, right: 10, top: 2, bottom: 2),
+                margin: const EdgeInsets.only(bottom: 20),
                 height: 80,
                 width: MediaQuery.of(context).size.width,
                 child: ListView.builder(
@@ -109,12 +168,18 @@ class GroupName extends StatelessWidget {
                     color: Colors.white,
                   ),
                   onPressed: () async {
-                    await prov.creategroup(name.text).then((value) =>
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                            'ChatMainScreen', (route) => false));
+                    if (name.text.trim() == "") {
+                      setState(() {
+                        nameempty = true;
+                      });
+                    } else {
+                      await prov.creategroup(name.text,file).then((value) =>
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              'ChatMainScreen', (route) => false));
+                    }
                   },
                 ),
-              ))
+              )),
               
         ]),
       ),

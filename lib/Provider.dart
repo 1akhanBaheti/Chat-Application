@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:recase/recase.dart';
@@ -12,11 +15,11 @@ class provider1 extends ChangeNotifier {
   Future getusers() async {
     List data = [];
 
-     FirebaseFirestore.instance.collection('Users').snapshots().listen((value) {
+    FirebaseFirestore.instance.collection('Users').snapshots().listen((value) {
       //print(value.docs[0].data());
       Users = [];
       username = {};
-        
+
       value.docs.forEach((element) {
         //print(element.data());
         //print(element.id);
@@ -142,7 +145,7 @@ class provider1 extends ChangeNotifier {
             // print(key);
             var d1 = d[key] as Map<String, dynamic>;
             d1.addAll({
-              "${d1.length - 3 + 1}": {
+              "${d1.length - 4 + 1}": {
                 "Message": m,
                 "Sender": FirebaseAuth.instance.currentUser!.phoneNumber!
                     .substring(3),
@@ -203,7 +206,7 @@ class provider1 extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future creategroup(String name) async {
+  Future creategroup(String name, var file) async {
     var n = [];
     var id = [];
     grouplist.forEach((element) {
@@ -215,16 +218,30 @@ class provider1 extends ChangeNotifier {
     var instance = FirebaseFirestore.instance.collection('Users-Chats');
 
     var x1 = DateTime.now().toString();
+    var link;
+    if (file != null) {
+      await FirebaseStorage.instance
+          .ref('Users')
+          .child(x1)
+          .child(name)
+          .putFile(File(file.path))
+          .then((p0) async => link = await p0.ref.getDownloadURL());
+    }
+
     for (int i = 0; i < n.length; i++) {
       try {
         await instance.doc(id[i]).get().then((value) async {
           var data = await value.data()!['group-chats'] as Map<String, dynamic>;
           var s = {};
-          s.addAll({"usersId": id, "userNo": n, "groupName": name});
+          s.addAll({"usersId": id, "userNo": n, "groupName": name,"url":link});
           data[x1] = s;
           await instance.doc(id[i]).update({"group-chats": data});
+          grouplist = [];
+          result = [];
         });
       } catch (e) {
+        grouplist = [];
+        result = [];
         print(e);
       }
     }

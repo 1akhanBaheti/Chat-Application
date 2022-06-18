@@ -24,8 +24,8 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
   Widget build(BuildContext context) {
     var data = Provider.of<provider1>(context);
     //print(FirebaseAuth.instance.currentUser!.uid);
-    //print("chats=${data.chatKeys.length}");
-    // print("groupchats=${data.groupkeys.length}");
+    print("chats=${data.chatKeys.length}");
+    print("groupchats=${data.groupkeys.length}");
     return Scaffold(
         appBar: AppBar(
           systemOverlayStyle:
@@ -74,6 +74,8 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
                   child: ListView.builder(
                       itemCount: data.chatKeys.length + data.groupkeys.length,
                       itemBuilder: (ctx, index) {
+                       // print("index=$index");
+                       // print((data.chatKeys.length - index).abs());
                         return InkWell(
                           onTap: () {
                             if (more) {
@@ -83,22 +85,24 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
                             } else {
                               Navigator.of(context)
                                   .pushNamed('chatscreen', arguments: {
-                                "key": data.chatKeys.length - 1 >= index
+                                "key": data.chatKeys.length  > index
                                     ? data.chatKeys[index].toString()
-                                    : data.groupkeys[
-                                            data.groupkeys.length - index]
+                                    : data
+                                        .groupkeys[index-data.chatKeys.length]
                                         .toString(),
-                                "type": data.chatKeys.length - 1 >= index
+                                "type": data.chatKeys.length > index
                                     ? "chat"
                                     : "group",
-                                "name": data.chatKeys.length - 1 >= index
+                                "name": data.chatKeys.length > index
                                     ? data.chats[
                                         data.chatKeys[index].toString()]['name']
-                                    : data.groupchats[data.groupkeys[
-                                            data.groupkeys.length - index]
+                                    : data.groupchats[data
+                                        .groupkeys[ index- data.chatKeys.length ]
                                         .toString()]['groupName'],
-                                 "url": data.chatKeys.length - 1 >= index?data.urls[data.chatKeys[index]
-                                                .toString()]   :null    
+                                "url": data.chatKeys.length > index
+                                    ? data.urls[data.chatKeys[index].toString()]
+                                    : data.groupchats[data.groupkeys[
+                                       index- data.chatKeys.length]]['url']
                               });
                             }
                           },
@@ -106,14 +110,21 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
                             leading: Container(
                               child: CircleAvatar(
                                 radius: 25,
-                                backgroundImage: data.chatKeys.length-1 >= index &&
-                                        data.urls[data.chatKeys[index]
-                                                .toString()] !=
+                                backgroundImage: data.chatKeys.length > index &&
+                                        data.urls[data.chatKeys[index].toString()] !=
                                             null
-                                    ? Image.network(data.urls[
-                                            data.chatKeys[index].toString()])
+                                    ? Image.network(data.urls[data.chatKeys[index].toString()])
                                         .image
-                                    : null,
+                                    
+                                    :data.chatKeys.length <= index &&data.groupchats[data.groupkeys[index-data.chatKeys.length]]
+                                                ['url'] !=
+                                            null 
+                                        ? Image.network(data.groupchats[data
+                                                    .groupkeys[
+                                                index-data.chatKeys.length
+                                                    ]]['url'])
+                                            .image
+                                        : null,
                               ),
                             ),
                             title: Text(
@@ -121,7 +132,7 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
                                   ? data.chats[data.chatKeys[index].toString()]
                                       ['name']
                                   : data.groupchats[data
-                                      .groupkeys[data.groupchats.length - index]
+                                      .groupkeys[index-data.chatKeys.length]
                                       .toString()]['groupName'],
                               style: GoogleFonts.lato(
                                   fontSize: 20, fontWeight: FontWeight.bold),
@@ -130,8 +141,8 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
                               data.chatKeys.length > index
                                   ? data.chatKeys[index].toString()
                                   : ((data.groupchats[data.groupkeys[
-                                              data.groupchats.length -
-                                                  index]]['userNo']) as List)
+                                                  index-data.chatKeys.length ]]
+                                              ['userNo']) as List)
                                           .length
                                           .toString() +
                                       " member",
@@ -190,8 +201,10 @@ class _ChatMainScreenState extends State<ChatMainScreen> {
                             ),
                             InkWell(
                               onTap: (() {
-                                more = false;
-                                Navigator.of(context).pushNamed('NewGroup');
+                                setState(() {
+                                  more = false;
+                                  Navigator.of(context).pushNamed('NewGroup');
+                                });
                               }),
                               child: Container(
                                 margin: const EdgeInsets.all(10),
